@@ -50,6 +50,17 @@ void kernel_trap(struct ktrapframe *ktf) {
                 tracef("s-timer interrupt, cycle: %d", r_time());
                 set_next_timer();
                 // we never preempt kernel threads.
+                struct proc *p = curr_proc();
+                // Hint 1: 确保当前有进程在运行且处于 RUNNING 状态
+                if (p != 0 && p->state == RUNNING) {
+                    // Hint 2: 绕过内核调度检查
+                    // 内核默认不允许在 trap 中调用 sched，所以我们需要暂时清零计数器
+                    int old_inkernel_trap = mycpu()->inkernel_trap;
+                    mycpu()->inkernel_trap = 0;
+
+                    yield(); // 放弃 CPU，回到 scheduler
+                    mycpu()->inkernel_trap = old_inkernel_trap;
+                }
                 break;
             case SupervisorExternal:
                 tracef("s-external interrupt.");

@@ -29,6 +29,8 @@ struct context {
     uint64 s9;
     uint64 s10;
     uint64 s11;
+    uint64 sstatus; // <--- 新增这一行
+    uint64 sepc;    // 偏移 120 <--- 新增
 };
 
 struct cpu {

@@ -21,6 +21,12 @@ swtch:
         sd s9, 88(a0)
         sd s10, 96(a0)
         sd s11, 104(a0)
+        # --- 新增保存 sstatus ---
+        csrr t0, sstatus
+        sd t0, 112(a0)  # 偏移量 112 是因为 s11 在 104，增加 8 字节
+        csrr t0, sepc    # <--- 读取当前 CPU 的 sepc
+        sd t0, 120(a0)   # <--- 保存到旧进程 context
+       
 
         ld ra, 0(a1)
         ld sp, 8(a1)
@@ -36,5 +42,8 @@ swtch:
         ld s9, 88(a1)
         ld s10, 96(a1)
         ld s11, 104(a1)
-
+        ld t0, 112(a1)
+        csrw sstatus, t0
+        ld t0, 120(a1)   # <--- 从新进程 context 加载 sepc
+        csrw sepc, t0    # <--- 写入当前 CPU 的 sepc
         ret

@@ -75,6 +75,12 @@ int create_kthread(void (*fn)(uint64), uint64 arg) {
     p->context.sp = p->kstack + PGSIZE;
     p->context.s1 = (uint64)fn;
     p->context.s2 = arg;
+        // --- 新增：初始化 sstatus ---
+    // 确保新线程启动时 SPP 位为 1 (S-mode)，且 SIE 位为 1 (允许中断)
+    // SSTATUS_SPP 通常是 (1L << 8)，SSTATUS_SIE 通常是 (1L << 1)
+    // 你可以查看 os/riscv.h 确认宏定义
+    p->context.sstatus = r_sstatus() | SSTATUS_SPP | SSTATUS_SPIE; 
+    p->context.sepc = (uint64)first_sched_ret; // <--- 新增
     p->state = RUNNABLE;
     p->parent = init_proc;
 
